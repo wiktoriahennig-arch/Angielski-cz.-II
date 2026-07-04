@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nursing English - 120 Questions Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+        .option-btn { transition: all 0.2s ease; }
+        .option-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+<div id="app" class="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden">
+    <!-- Header -->
+    <div class="bg-indigo-600 p-6 text-white text-center">
+        <h1 class="text-2xl font-bold uppercase tracking-wide">Medical English Mega Quiz</h1>
+        <div class="mt-2 text-indigo-200 font-semibold" id="progress-text">Pytanie 1 / 120</div>
+        <div class="w-full bg-indigo-800 h-3 mt-4 rounded-full overflow-hidden">
+            <div id="progress-bar" class="bg-green-400 h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Quiz Content -->
+    <div id="quiz-container" class="p-8">
+        <!-- Ekran startowy -->
+        <div id="start-screen" class="text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Wielki Test (120 pytań)</h2>
+            <p class="text-gray-600 mb-8 text-lg">Przed Tobą zestaw 120 pytań wielokrotnego wyboru. Na każdej stronie znajduje się jedno pytanie. Powodzenia!</p>
+            <button onclick="startQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition">
+                ROZPOCZNIJ QUIZ
+            </button>
+        </div>
+
+        <!-- Ekran pytań -->
+        <div id="question-screen" class="hidden">
+            <div id="question-text" class="text-xl text-gray-800 font-bold mb-6 leading-relaxed">
+                <!-- Pytanie pojawi się tutaj -->
+            </div>
+            <div id="options-container" class="space-y-3">
+                <!-- Opcje pojawią się tutaj -->
+            </div>
+            <div id="feedback" class="mt-6 p-4 rounded-lg hidden"></div>
+            <button id="next-btn" onclick="nextQuestion()" class="mt-8 w-full bg-gray-800 hover:bg-black text-white font-bold py-3 px-6 rounded-xl hidden transition">
+                NASTĘPNE PYTANIE &rarr;
+            </button>
+        </div>
+
+        <!-- Ekran końcowy -->
+        <div id="end-screen" class="hidden text-center">
+            <div class="text-6xl mb-4">🏆</div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Quiz Zakończony!</h2>
+            <p class="text-xl text-gray-600 mb-6">Udało Ci się przejść przez wszystkie 120 pytań.</p>
+            <div class="bg-indigo-50 p-6 rounded-2xl mb-8 inline-block w-full">
+                <div class="text-sm text-indigo-600 uppercase font-bold">Twój Wynik</div>
+                <div id="final-score" class="text-5xl font-black text-indigo-800 mt-2">0/120</div>
+            </div>
+            <button onclick="location.reload()" class="mt-4 text-indigo-600 font-semibold hover:underline">Spróbuj ponownie</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Format: [Pytanie, [Opcje], Indeks poprawnej odpowiedzi]
+    const questionsData = [
+        ["1. Which equipment measures blood pressure automatically?", ["Scales", "Digital blood pressure monitor", "Pulse oximeter"], 1],
+        ["2. What equipment do you use to weigh a patient?", ["Scales", "Blood pressure monitor", "Pulse oximeter"], 0],
+        ["3. Which part of the body is located in the middle of the chest?", ["Navel", "Heart", "Hip"], 1],
+        ["4. Which body part bends when you walk and run?", ["Elbow", "Knee", "Wrist"], 1],
+        ["5. Where are the fingers found?", ["At the end of the arm", "At the end of the leg", "In the middle of the back"], 0],
+        ["6. What kind of questions does the nurse ask to find out about the patient's medical background?", ["Questions about family and hobbies", "Questions about favorite foods", "Questions about past illnesses, operations, and medications"], 2],
+        ["7. How does the heart work, according to the patient information leaflet?", ["It produces oxygen for the blood", "It filters toxins from the blood", "It pumps blood through chambers and valves to the lungs and body"], 2],
+        ["8. What are the main parts of the heart mentioned in the leaflet?", ["Brain, spine, and lungs", "Atria, ventricles, valves, pulmonary artery, and aorta", "Muscles, bones, and nerves"], 1],
+        ["9. What symptoms might a person have if there isn't enough blood flow through the heart?", ["Energy levels", "Increased appetite", "Chest pain and shortness of breath"], 2],
+        ["10. Why must a nurse read all entries in the patient record?", ["To learn about the patient's insurance details", "To plan care effectively and know the full medical picture", "To find out the patient's favorite nurse"], 1],
+        ["11. ... is responsible for all nurses who work on the ward.", ["a Ward Nurse", "a doctor", "a receptionist"], 0],
+        ["12. What does a nurse use when she needs to take a patient's temperature?", ["a blood pressure cuff", "a pulse oximeter", "a tympanic thermometer"], 2],
+        ["13. ..., please. I'm going to take your blood pressure.", ["roll up your sleeve", "bend your arm", "stand on the scales"], 0],
+        ["14. The English equivalent of the word <<< częstotliwość oddechu >>> is", ["blood pressure", "heart rate", "respiratory rate"], 2],
+        ["15. She feels sick and ... on her feet, because she has had an operation.", ["lower", "allergic", "unsteady"], 2],
+        ["16. What do nurses check first in Recovery?", ["If the patient is hungry", "If the patient needs an x-ray", "If the patient is alert and oriented"], 2],
+        ["17. What is often used to help patients breathe in Recovery?", ["A ventilator", "An oxygen mask", "A heart monitor"], 1],
+        ["18. Where are patients transferred if they have serious heart problems?", ["Intensive Care Unit (ICU)", "Coronary Care Unit (CCU)", "Intensive Therapy Unit (ITU)"], 1],
+        ["19. If a patient says they feel sick, what does the nurse provide?", ["A pillow", "A vomit bowl", "A blanket"], 1],
+        ["20. Where do nurses record the IV infusion details?", ["Patient's bedside chart", "Nurse's personal notebook", "Fluid Balance Chart"], 2],
+        ["21. What is the first step before preparing an IV infusion?", ["Check the patient's identity", "Connect the IV", "Wash hands"], 2],
+        ["22. What does the nurse ask first after surgery?", ["\"Can you open your eyes, please?\"", "\"Have you eaten today?\"", "\"Do you want to go home?\""], 0],
+        ["23. If the dressing is uncomfortable, what should the nurse do?", ["Remove the IV", "Recheck and adjust it", "Leave it as it is"], 1],
+        ["24. Before a surgeon starts an operation, a patient must get...", ["a dressing", "an appointment", "an anaesthetic"], 2],
+        ["25. The English equivalent of Polish word,, opiekować się, zajmować się\" is ..", ["go over", "care for", "write up"], 1],
+        ["26. Which department handles kidney-related problems?", ["Cardiology", "Nephrology", "Oncology"], 1],
+        ["27. Where are patients treated for mental health issues?", ["Psychiatry", "Oncology", "Pediatrics"], 0],
+        ["28. ... is an unpleasant feeling of wanting to vomit.", ["nausea", "dizziness", "insomnia"], 0],
+        ["29. An antiemetic is a medication that", ["relieves pain", "removes excess body fluid", "stops a patient vomiting or feeling sick"], 2],
+        ["30. Other cancers which grow away from the main tumour are referred to as", ["scars", "stretchmarks", "secondaries"], 2],
+        ["31. 'Tingling' means in Polish", ["drętwienie", "kłucie", "mrowienie"], 2],
+        ["32. 'GOIĆ SIĘ, zrastać' is in English .....", ["heel", "heal", "hill"], 1],
+        ["33. Pain rated as 9 on a 1-10 point pain scale is referred to as ... pain.", ["severe", "mild", "moderate"], 0],
+        ["34. A walking ..... is a type of mobility aid that gives you support when walking.", ["bar", "frame", "hoist"], 1],
+        ["35. 'Badanie kontrolne' is in English", ["check-in", "check-up", "check-on"], 1],
+        ["36. Which of the following is NOT a task of a District Nurse? Mark the incorrect answer:", ["administers medications", "changes dressings", "cooks meals", "gives insulin injections"], 2],
+        ["37. What is 'an injury to the skin'?", ["bandage", "dressing", "wound"], 2],
+        ["38. How would you best describe a patient who cannot fully control their bladder or urine?", ["elderly", "sensitive", "incontinent (of urine)"], 2],
+        ["39. Which of the following terms refers to injections given under the skin?", ["GP", "SC", "dose"], 1],
+        ["40. What does it mean necrosis?", ["death of cells and living tissue", "expired medicine", "oxygen"], 0],
+        ["41. Which of the following is the correct way to administer medication orally?", ["Injecting the medication directly into the bloodstream", "Applying the medication to the skin surface", "Swallowing the medication with water"], 2],
+        ["42. What hormone regulates blood sugar levels?", ["Glucagon", "Adrenaline", "Insulin"], 2],
+        ["43. What is the meaning of 'hypoglycaemia'?", ["High level of sugar in the blood", "Low level of sugar in the blood", "Presence of glucose in the urine"], 1],
+        ["44. Yellow liquid that comes out of the wound is referred to as", ["sputum", "haemorrhage", "pus"], 2],
+        ["45. .... means 'red, painful and swollen'.", ["inflamed", "nauseous", "itchy"], 0],
+        ["46. Stitches used to sew up a cut are called", ["syringes", "sutures", "swab"], 1],
+        ["47. A(n) ... is a group of cells with a similar function and structure.", ["organ", "system", "tissue"], 2],
+        ["48. A physician who works in a surgery and whose practice covers all areas of health problems is called a(n) ..", ["surgeon", "obstetrician", "general practitioner"], 2],
+        ["49. Nurses ... medications.", ["appoint", "administer", "admit"], 1],
+        ["50. The wound is bleeding. We need to stop it and apply a ........", ["dressing", "swelling", "scratching"], 0],
+        ["51. ... nurses visit people in their own homes offering help to them and their families.", ["Ward", "Scrub-up", "District"], 2],
+        ["52. 'Pielęgniarka POZ' is in English a ' .... nurse'.", ["practice", "ward", "registered"], 0],
+        ["53. Which of the following is a key responsibility of nurses in the rehabilitation process?", ["Prescribing medications", "Encouraging and assisting patients with self-care activities", "Performing surgical procedures"], 1],
+        ["54. What is the purpose of range of motion (ROM) exercises in rehabilitation?", ["To enhance verbal communication skills", "To improve joint flexibility and prevent stiffness", "To increase appetite"], 1],
+        ["55. What should caregivers do before using a hoist?", ["Start lifting immediately", "Explain the procedure to the patient", "Skip instructions"], 1],
+        ["56. How should a patient grip the hoist during lifting from sitting position?", ["With one hand", "Without touching it", "With both hands"], 2],
+        ["57. What is the primary function of a hand block?", ["To transfer patients from bed to stretcher", "To assist patients in moving independently in bed", "To improve hoist safety"], 1],
+        ["58. Which tool is commonly used during patient bathing for support and mobility?", ["Hoist", "Commode chair", "Hand block"], 1],
+        ["59. After surgery, what mobility aid might a patient use for a short walk?", ["Hoist", "Walking stick", "Wheelchair"], 1],
+        ["60. What mobility aid is most appropriate for a patient with a broken leg?", ["Walking stick", "Wheelchair", "Crutches"], 2],
+        ["61. What should you always check before giving medication?", ["The patient's appetite", "The patient's identity", "The patient's family history"], 1],
+        ["62. What form of medication is designed to be swallowed whole?", ["Injection", "Tablet", "Ointment"], 1],
+        ["63. Where are eye drops administered?", ["Nose", "Mouth", "Eyes"], 2],
+        ["64. What is a side effect?", ["The intended effect of a drug", "An unintended reaction", "The main purpose of the medication"], 1],
+        ["65. What type of medication is usually applied to the skin?", ["Cream", "Capsule", "Syrup"], 0],
+        ["66. Before administering medication, what must you check?", ["Doctor's hobby", "Expiry date", "Blood group"], 1],
+        ["67. Which type of medication is injected into the muscle?", ["Intravenous", "Intramuscular", "Subcutaneous"], 1],
+        ["68. What is a prescription?", ["A shopping list", "A doctor's written order for medication", "A food menu"], 1],
+        ["69. What should you do if a patient refuses medication?", ["Force them to take it", "Document it and inform the nurse/doctor", "Ignore it"], 1],
+        ["70. What is the correct route for a nasal spray?", ["Mouth", "Nose", "Ear"], 1],
+        ["71. What is the abbreviation 'IV' short for?", ["Intramuscular", "Intravenous", "Oral"], 1],
+        ["72. What is the role of the pharmacy in a hospital?", ["Preparing and dispensing medications", "Conducting surgeries", "Managing patient diets"], 0],
+        ["73. Which of the following imaging techniques is most effective for detecting brain tumors?", ["CT scan", "X-ray", "MRI"], 2],
+        ["74. What should a nurse do before a patient undergoes a CT scan?", ["Ensure the patient has fasted for at least 12 hours", "Remove all metallic objects from the patient's body", "Administer a sedative to the patient"], 1],
+        ["75. Why should diabetics monitor their carbohydrate intake?", ["Carbs have no effect on blood sugar", "Carbs help increase blood sugar rapidly", "Carbs directly affect blood sugar levels"], 2],
+        ["76. Why is fiber important for diabetics?", ["It raises blood sugar quickly", "It helps slow sugar absorption", "It tastes better"], 1],
+        ["77. What does the abbreviation 'appt' mean?", ["Appointment", "Registered Nurse", "Patient"], 0],
+        ["78. What is the purpose of a laparoscope?", ["To store bile.", "To visualize the abdominal organs.", "To block pain during surgery."], 1],
+        ["79. What does the nurse usually ask about during the medical history part of the admission?", ["Family income", "Previous illnesses and operations", "Travel plans"], 1],
+        ["80. Which of the following is an example of a closed question used during admission?", ["Can you describe the pain?", "What brings you in today?", "Do you have any allergies?"], 2],
+        ["81. What is the term for no breathing at all?", ["Dyspnoea", "Apnoea", "Eupnoea"], 1],
+        ["82. Which part of the respiratory system is located behind the nose and mouth and connects them to the windpipe?", ["Alveoli", "Pharynx", "Bronchus"], 1],
+        ["83. What is swelling caused by an infection called?", ["Fracture", "Inflammation", "Bruise"], 1],
+        ["84. What is the inflammation of the tissue under the skin, often caused by infection, called?", ["Cellulitis", "Dermatitis", "Psoriasis"], 0],
+        ["85. ... is the process of removing dirt, debris, dead tissue, and microorganisms from a wound to promote healing and reduce the risk of infection.", ["Wound cleansing", "Wound dressing", "Wound drying"], 0],
+        ["86. A person who suffers from diabetes is called:", ["diabetic", "nurse", "diabetes"], 0],
+        ["87. What hormone has the opposite function to insulin?", ["testosterone", "progesterone", "glucagon"], 2],
+        ["88. What is the primary purpose of a diabetic chart in patient care?", ["To track meal preferences", "To monitor blood sugar levels and document medical actions", "To record patient allergies"], 1],
+        ["89. How often should a nurse check a diabetic patient's blood sugar according to standard protocols?", ["Once a day", "Before and after meals, and at bedtime", "Only when the patient reports symptoms"], 1],
+        ["90. What is the role of the pancreas in diabetes management?", ["It produces insulin to regulate blood sugar", "It absorbs excess glucose from the blood", "It breaks down fats in digestion"], 0],
+        ["91. What is a symptom of hypoglycemia?", ["frequently urination", "sweating and shaking", "high blood pressure"], 1],
+        ["92. Which of the following is mentioned as a potential symptom of renal failure?", ["Increased appetite.", "Passing a large amount of urine.", "Feeling very tired."], 2],
+        ["93. What is the purpose of an indwelling urinary catheter (IDC)?", ["To collect a single urine sample for immediate testing.", "To continuously drain urine from the bladder.", "To help patients walk to the toilet more easily."], 1],
+        ["94. When reviewing a Pathology Report, what information does the 'Antibiotics' section typically provide?", ["Details about the patient's medical history and past illnesses", "The identified microorganisms and their response to various antibiotic medications.", "Instructions on how to administer medication to the patient."], 1],
+        ["95. What is an abbreviation of an injection given into the muscle?", ["IM", "PO", "SC"], 0],
+        ["96. What is eyeballs?", ["organ of hearing", "organ of vision", "urinary system organ"], 1],
+        ["97. Crosscheck the dose of the medication on the Prescription Chart and on the medication label to ensure ...", ["the right dose", "the right time", "the right drug"], 0],
+        ["98. Which of the following is a route of administration?", ["Prescription", "Intramuscular", "Side effect"], 1],
+        ["99. What does the abbreviation 'PRN' mean on a medication chart?", ["As soon as possible", "Before meals", "When necessary"], 2],
+        ["100. Which of the following is a possible side effect of medication?", ["Pain relief", "Nausea", "Healing"], 1],
+        ["101. What is the correct term for checking the name and dose before giving a drug?", ["Verification", "Administration", "Observation"], 0],
+        ["102. What should a nurse do if a patient refuses to take medication?", ["Force the patient to take it", "Ignore the patient and record it as given", "Inform the doctor and record the refusal"], 2],
+        ["103. What does 'oral administration' mean?", ["The drug is given through an injection", "The drug is applied to the skin", "The drug is taken by mouth"], 2],
+        ["104. Which body part is used for balance when walking?", ["Heel", "Chin", "Forehead"], 0],
+        ["105. The English equivalent for the word <<< mankiet do ciśnieniomierza >>> is", ["digital blood pressure monitor", "blood pressure cuff", "pulse"], 1],
+        ["106. Which part of the body is primarily affected by asthma?", ["Liver", "Lungs", "Heart"], 1],
+        ["107. Which of the following can trigger an asthma attack?", ["Cold air", "Warm milk", "Exercise (if multiple correct, select A)"], 0],
+        ["108. Where are cancer patients usually treated?", ["Oncology", "Radiology", "Neurology"], 0],
+        ["109. Which department treats diseases of the brain?", ["Urology", "Neurology", "Endocrinology"], 1],
+        ["110. Who visit people in their own homes or in Residential Care Homes?", ["District Nurse", "Pharmacist", "Dietician"], 0],
+        ["111. Where is the shin located?", ["On the back of the arm", "On the front of the lower leg", "On the foot"], 1],
+        ["112. What is the primary aim of rehabilitation?", ["To provide long-term hospital care", "To cure the patient's disease", "To help patients regain independence and improve quality of life"], 2],
+        ["113. What should you always check before giving medication?", ["The patient's appetite", "The patient's identity", "The patient's family history"], 1],
+        ["114. What should a nurse do before a patient undergoes a CT scan?", ["Ensure the patient has fasted for at least 12 hours", "Remove all metallic objects from the patient's body", "Administer a sedative to the patient"], 1],
+        ["115. What is the normal blood pressure according to standard guidelines?", ["160/100 mmHg", "120/80 mmHg", "140/95 mmHg"], 1],
+        ["116. What is the normal fasting blood glucose level in a healthy person?", ["100-125 mg/dl", "70-99 mg/dl", "50-70 mg/dl"], 1],
+        ["117. What is the normal total cholesterol level in the blood?", ["Less than 200 mg/dl", "Less than 240 mg/dl", "Between 200-239 mg/dl"], 0],
+        ["118. Would you use different strategies for different age Groups?", ["Yes, different strategies may be needed depending on the needs of the particular age group", "I don't care", "sometimes"], 0],
+        ["119. What is the first step a nurse should take when a patient experiences hypoglycemia?", ["Advise them to rest and monitor symptoms", "Administer a sugary drink or snack", "Increase their insulin dosage"], 1],
+        ["120. What is a good strategy when advising diabetic patients on lifestyle changes?", ["Engaging them in decision-making", "Using complex medical terms to emphasize importance", "Focusing on their mistakes"], 0]
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let answered = false;
+
+    function startQuiz() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('question-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        answered = false;
+        const qData = questionsData[currentIdx];
+        
+        document.getElementById('question-text').innerText = qData[0];
+        document.getElementById('progress-text').innerText = `Pytanie ${currentIdx + 1} z ${questionsData.length}`;
+        document.getElementById('progress-bar').style.width = `${((currentIdx) / questionsData.length) * 100}%`;
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        qData[1].forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 font-medium text-gray-700 flex items-center justify-between";
+            btn.innerHTML = `<span>${opt}</span><span class="icon hidden text-xl"></span>`;
+            btn.onclick = () => checkAnswer(index, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('feedback').classList.add('hidden');
+        document.getElementById('next-btn').classList.add('hidden');
+    }
+
+    function checkAnswer(selectedIndex, btn) {
+        if(answered) return;
+        answered = true;
+
+        const qData = questionsData[currentIdx];
+        const correctIndex = qData[2];
+        const allBtns = document.querySelectorAll('.option-btn');
+        const feedback = document.getElementById('feedback');
+        
+        allBtns.forEach(b => b.disabled = true);
+
+        if(selectedIndex === correctIndex) {
+            score++;
+            btn.classList.remove('border-gray-200');
+            btn.classList.add('border-green-500', 'bg-green-100', 'text-green-800');
+            btn.querySelector('.icon').innerHTML = '✅';
+            btn.querySelector('.icon').classList.remove('hidden');
+            feedback.innerText = "Poprawna odpowiedź!";
+            feedback.className = "mt-6 p-4 rounded-lg bg-green-100 text-green-800 font-bold border border-green-200";
+        } else {
+            btn.classList.remove('border-gray-200');
+            btn.classList.add('border-red-500', 'bg-red-100', 'text-red-800');
+            btn.querySelector('.icon').innerHTML = '❌';
+            btn.querySelector('.icon').classList.remove('hidden');
+            
+            // Podświetl prawidłową odpowiedź
+            allBtns[correctIndex].classList.add('border-green-500', 'bg-green-100', 'text-green-800');
+            
+            feedback.innerText = `Niestety nie. Poprawna odpowiedź to: ${qData[1][correctIndex]}`;
+            feedback.className = "mt-6 p-4 rounded-lg bg-red-100 text-red-800 font-bold border border-red-200";
+        }
+        
+        feedback.classList.remove('hidden');
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        if(currentIdx < questionsData.length) {
+            showQuestion();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            showEndScreen();
+        }
+    }
+
+    function showEndScreen() {
+        document.getElementById('question-screen').classList.add('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = `${score} / ${questionsData.length}`;
+        document.getElementById('progress-bar').style.width = `100%`;
+        document.getElementById('progress-text').innerText = `Quiz Zakończony!`;
+    }
+</script>
+
+</body>
+</html>
